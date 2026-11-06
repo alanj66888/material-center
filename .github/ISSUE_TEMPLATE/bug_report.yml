@@ -1,0 +1,29 @@
+name: 缺陷报告
+description: 报告可以复现的问题
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: 请使用测试素材，隐藏真实 NAS 地址、文件路径和账号信息。
+  - type: input
+    id: version
+    attributes:
+      label: 软件版本
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: 系统版本与芯片
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤、预期与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: 脱敏截图、日志或测试样片（可选）

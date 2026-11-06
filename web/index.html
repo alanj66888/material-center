@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>素材中心 · 本地素材库</title>
+    <link rel="icon" type="image/png" href="/app-icon.png" />
+    <link rel="stylesheet" href="/style.css?v=interaction-1.3" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <img class="logo" src="/app-icon.png" alt="" /><b
+          >素材中心<small>LOCAL LIBRARY</small></b
+        ><button id="openSettings" aria-label="设置" title="设置">⚙</button>
+      </div>
+      <button class="add primary" id="add">＋ 连接素材文件夹</button>
+      <div class="nav" id="nav">
+        <button data-view="all" class="active">
+          ▦ <span>全部素材</span><em id="total">0</em></button
+        ><button data-view="favorite">
+          ☆ <span>我的收藏</span><em id="favcount">0</em></button
+        ><button data-view="video">▷ <span>视频素材</span></button
+        ><button data-view="image">▧ <span>图片素材</span></button
+        ><button data-view="audio">♫ <span>音频素材</span></button
+        ><button data-view="trash">
+          ♧ <span>回收站</span><em id="trashCount">0</em>
+        </button>
+      </div>
+      <div class="section-label">
+        文件夹 <button id="refresh" title="重新扫描全部文件夹">↻</button>
+      </div>
+      <div class="folder-search">
+        <input
+          id="folderSearch"
+          placeholder="⌕ 查找文件夹"
+          aria-label="查找文件夹"
+          autocomplete="off"
+        /><button
+          id="clearFolderSearch"
+          type="button"
+          aria-label="清空文件夹搜索"
+          title="清空搜索"
+          hidden
+        >
+          ×
+        </button>
+      </div>
+      <label class="folder-sort-label" hidden
+        >文件夹排序<select id="folderSort" aria-label="文件夹排序">
+          <option value="name-asc">名称：升序</option>
+          <option value="name-desc">名称：降序</option>
+          <option value="count-desc">素材数量：从多到少</option>
+          <option value="count-asc">素材数量：从少到多</option>
+        </select></label
+      >
+      <div class="folder-context-hint">右键排序、重新加载或扫描</div>
+      <div id="folders"></div>
+      <div
+        id="tagsSplitter"
+        role="separator"
+        tabindex="0"
+        aria-orientation="horizontal"
+        aria-label="调整文件夹与标签区域高度"
+        title="拖动调整标签区域高度，双击恢复默认"
+      ></div>
+      <section id="tagSection">
+        <div class="section-label">标签</div>
+        <div id="tags" class="tags"></div>
+      </section>
+      <div class="local">
+        <i></i> 本地资料库 <small>文件保留在原来的位置</small>
+      </div>
+    </aside>
+    <div
+      id="leftSplitter"
+      class="panel-splitter"
+      role="separator"
+      tabindex="0"
+      aria-orientation="vertical"
+      aria-label="调整文件夹栏宽度"
+      title="拖动调整宽度，双击恢复默认"
+    ></div>
+    <main>
+      <header class="library-header">
+        <button id="upFolder" title="返回上一级" aria-label="返回上一级">
+          ↑
+        </button>
+        <div
+          id="libraryPath"
+          class="breadcrumb"
+          role="button"
+          tabindex="0"
+          aria-label="当前路径，双击返回上一层"
+        >
+          <span class="path-prefix">我的资料库 / </span>
+          <h1 id="title">全部素材</h1>
+        </div>
+        <label class="search"
+          >⌕
+          <input
+            id="search"
+            placeholder="搜索文件名、路径、标签…"
+            autocomplete="off"
+          /><kbd>⌘ K</kbd></label
+        ><span class="offline">● 本地运行</span>
+      </header>
+      <div class="toolbar">
+        <div class="filters">
+          <button class="selected" data-kind="all">全部</button
+          ><button data-kind="video">视频</button
+          ><button data-kind="image">图片</button
+          ><button data-kind="audio">音频</button
+          ><button data-kind="document">文档</button
+          ><button data-kind="font">字体</button
+          ><button data-kind="project">工程 / 3D</button
+          ><button data-kind="archive">压缩包</button
+          ><button data-kind="other">其他</button>
+        </div>
+        <div class="tools">
+          <button id="sharedTags" title="共享标签设置">共享标签</button
+          ><button id="syncTags" title="立即同步共享标签">↻ 同步</button>
+          <details class="display-options">
+            <summary>显示信息</summary>
+            <div>
+              <label
+                ><input
+                  type="checkbox"
+                  data-card-info="name"
+                  checked
+                />名称</label
+              ><label
+                ><input
+                  type="checkbox"
+                  data-card-info="type"
+                  checked
+                />类型</label
+              ><label
+                ><input type="checkbox" data-card-info="size" />文件大小</label
+              ><label
+                ><input
+                  type="checkbox"
+                  data-card-info="dimensions"
+                />尺寸</label
+              ><label
+                ><input type="checkbox" data-card-info="duration" />时长</label
+              >
+            </div>
+          </details>
+          <button id="recycleMaterials" disabled>移入回收站</button
+          ><button id="batchTags" disabled>选中素材打标签</button
+          ><select id="sort" aria-label="排序">
+            <option value="modified">最近修改</option>
+            <option value="name">文件名称</option>
+            <option value="size">文件大小</option></select
+          ><input
+            type="range"
+            id="scale"
+            aria-label="缩略图大小"
+            min="120"
+            max="300"
+            value="170"
+          /><button id="gridView" class="selected" title="网格视图">▦</button
+          ><button id="listView" title="列表视图">☰</button>
+        </div>
+      </div>
+      <div class="result-bar">
+        <span id="resultCount">素材（0）</span
+        ><label
+          ><input type="checkbox" id="includeChildren" />
+          显示子文件夹素材</label
+        >
+      </div>
+      <div id="status" role="status"></div>
+      <section id="gallery" class="gallery"></section>
+      <section id="trashPanel" class="trash-panel" hidden>
+        <div class="trash-toolbar">
+          <button id="restoreTrash" disabled>还原选中素材</button
+          ><button id="purgeTrash" class="danger" disabled>
+            彻底删除选中素材</button
+          ><button id="emptyTrash" class="danger">清空回收站</button>
+        </div>
+        <p id="trashSummary"></p>
+        <div id="trashItems" class="trash-items"></div>
+      </section>
+      <div id="empty" class="empty" hidden>
+        <div class="empty-art">▧<span>＋</span></div>
+        <h2>把你的素材，连接起来</h2>
+        <p>
+          选择已经整理好的文件夹，即刻浏览视频、图片与音频。<br />保留你的目录结构，原文件无需搬家。
+        </p>
+        <button class="primary" id="emptyAdd">＋ 连接第一个文件夹</button
+        ><small>本地索引 · 无需账号 · 无需上传</small>
+      </div>
+      <section
+        id="audioAudition"
+        class="audio-audition"
+        aria-label="音频快捷试听"
+        hidden
+      >
+        <span class="audio-symbol">♫</span>
+        <div class="audio-audition-title">
+          <b id="audioAuditionName"></b
+          ><small id="audioAuditionStatus">音频试听</small>
+        </div>
+        <audio
+          id="audioAuditionPlayer"
+          controls
+          preload="metadata"
+          aria-label="音频试听播放器"
+        ></audio
+        ><button id="audioAuditionDetails" title="打开音频详情">详情</button
+        ><button id="closeAudioAudition" aria-label="停止并关闭音频试听">
+          ×
+        </button>
+      </section>
+      <footer>
+        <span id="count">0 个素材</span
+        ><span>音频单击试听 / 空格暂停 · 视频左右滑动预览</span>
+      </footer>
+    </main>
+    <div
+      id="rightSplitter"
+      class="panel-splitter"
+      role="separator"
+      tabindex="0"
+      aria-orientation="vertical"
+      aria-label="调整素材信息栏宽度"
+      title="拖动调整宽度，双击恢复默认"
+    ></div>
+    <aside id="inspector" class="inspector">
+      <div id="inspectCover" class="inspect-cover">▱</div>
+      <h3 id="inspectTitle">全部素材</h3>
+      <div class="section-label">素材信息</div>
+      <dl id="inspectMeta"></dl>
+      <div id="inspectActions" hidden>
+        <div id="inspectTagChips" class="tag-chips"></div>
+        <button id="inspectPreview">预览素材</button
+        ><button id="inspectFavorite">☆ 加入收藏</button
+        ><label class="tag-label"
+          >标签<input id="inspectTags" placeholder="风景, 航拍" /></label
+        ><button id="inspectSave">保存标签</button
+        ><button id="inspectReveal">在 Finder 中显示</button
+        ><button id="inspectOpen">用系统应用打开</button>
+      </div>
+      <p class="hint">单击查看信息<br />双击或空格预览</p>
+    </aside>
+    <dialog id="settings">
+      <div class="preview-top">
+        <b>设置</b><button id="closeSettings" aria-label="关闭设置">×</button>
+      </div>
+      <section class="settings-section">
+        <h3>外观</h3>
+        <div class="preference-choices" id="themeChoices">
+          <button data-theme="system">跟随系统</button
+          ><button data-theme="light">浅色</button
+          ><button data-theme="dark">深色</button>
+        </div>
+      </section>
+      <section class="settings-section">
+        <h3>应用图标</h3>
+        <div class="preference-choices icon-choices">
+          <button data-icon="original">
+            <img src="/app-icon.png" alt="原版图标" /><span>原版</span></button
+          ><button data-icon="light">
+            <img src="/icon-light.png" alt="白色图标" /><span
+              >白色</span
+            ></button
+          ><button data-icon="dark">
+            <img src="/icon-dark.png" alt="黑色图标" /><span>黑色</span>
+          </button>
+        </div>
+        <p class="hint">选择会保存在本机，并更新界面及桌面窗口的应用图标。</p>
+      </section>
+      <section class="settings-section">
+        <h3>关于素材中心</h3>
+        <dl>
+          <dt>版本</dt>
+          <dd id="settingsVersion">加载中</dd>
+          <dt>许可</dt>
+          <dd>PolyForm Noncommercial 1.0.0 · 仅限非商业用途</dd>
+          <dt>第三方组件</dt>
+          <dd>保留各自的许可证和权利，详见安装目录中的声明。</dd>
+          <dt>运行方式</dt>
+          <dd>本地索引 · 原文件保留在素材库 · 无需账号</dd>
+        </dl>
+        <button id="settingsShared">共享标签设置</button>
+      </section>
+    </dialog>
+    <dialog id="trashPreview">
+      <div class="preview-top">
+        <b id="trashPreviewName"></b
+        ><button id="closeTrashPreview" aria-label="关闭回收站预览">×</button>
+      </div>
+      <div id="trashPlayer"></div>
+      <div class="trash-preview-bottom">
+        <span id="trashPreviewInfo"></span
+        ><button id="restorePreview">还原此素材</button>
+      </div>
+    </dialog>
+    <dialog id="sharedSettings">
+      <div class="preview-top">
+        <b>共享标签设置</b
+        ><button id="closeShared" aria-label="关闭共享标签设置">×</button>
+      </div>
+      <p>
+        两台电脑连接 NAS
+        的同一层素材库根目录后，启用共享标签即可互通。记录保存在素材库的隐藏目录，不改写原素材；盘符或挂载路径可以不同。首次启用会合并两端已有标签，之后约每
+        15 秒同步。
+      </p>
+      <div id="sharedRoots"></div>
+    </dialog>
+    <dialog id="connect">
+      <form id="connectForm">
+        <button type="button" class="close" id="closeConnect">×</button>
+        <h2>连接素材文件夹</h2>
+        <p>选择一个文件夹，我们会扫描其中的素材与子文件夹。</p>
+        <div class="path-row">
+          <input
+            id="folderPath"
+            placeholder="例如 /Users/你的名字/Movies"
+            required
+          /><button type="button" id="choose">选择文件夹…</button>
+        </div>
+        <p class="hint">只建立本地索引，不移动或修改原文件。</p>
+        <p id="connectError" class="inline-error" role="alert"></p>
+        <button class="primary" id="scan" type="submit">连接并扫描</button>
+      </form>
+    </dialog>
+    <dialog id="preview">
+      <div class="preview-top">
+        <b id="previewName"></b><button id="closePreview">×</button>
+      </div>
+      <div class="preview-body">
+        <div class="preview-stage">
+          <div id="player"></div>
+          <section class="nearby-panel" aria-label="附近素材">
+            <div class="nearby-heading">
+              <span id="nearbyPosition">附近素材</span>
+              <div>
+                <button
+                  id="previewPrevious"
+                  title="上一项（←）"
+                  aria-label="上一项"
+                >
+                  ‹</button
+                ><button
+                  id="previewNext"
+                  title="下一项（→）"
+                  aria-label="下一项"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
+            <div
+              id="nearbyStrip"
+              class="nearby-strip"
+              aria-label="当前列表附近素材"
+            ></div>
+          </section>
+        </div>
+        <aside class="details">
+          <span class="section-label">素材信息</span>
+          <h3 id="detailName"></h3>
+          <dl id="metadata"></dl>
+          <button id="favoriteButton">☆ 加入收藏</button
+          ><label class="tag-label"
+            >标签<input
+              id="tagInput"
+              placeholder="用逗号分隔，如：风景, 航拍" /></label
+          ><button id="saveTags">保存标签</button>
+          <p id="fileDragNote" class="hint"></p>
+          <button id="reveal">在 Finder 中显示</button
+          ><button id="openExternal">用系统应用打开</button>
+          <p class="hint">
+            部分专业编码无法在浏览器播放，可用系统应用打开原文件。
+          </p>
+        </aside>
+      </div>
+    </dialog>
+    <dialog id="tagEditor">
+      <form id="tagForm">
+        <button type="button" class="close" id="closeTags">×</button>
+        <h2>给素材打标签</h2>
+        <p id="tagTarget"></p>
+        <input
+          id="batchInput"
+          placeholder="输入标签，用逗号分隔，如：风景, 航拍"
+          aria-label="添加素材标签"
+          required
+        />
+        <p class="hint">空白处拖动框选；Shift 连续选择，⌘ / Ctrl 追加选择。</p>
+        <p id="tagError" class="inline-error" role="alert"></p>
+        <button type="submit" id="applyTags" class="primary">保存标签</button>
+      </form>
+    </dialog>
+    <div
+      id="folderContextMenu"
+      class="context-menu"
+      role="menu"
+      aria-label="素材库操作"
+      hidden
+    >
+      <button type="button" role="menuitem" id="reloadLibraryView">
+        ↻ 重新加载当前视图 / 缩略图</button
+      ><button type="button" role="menuitem" id="rescanLibrary">
+        ⟳ 重新扫描素材库
+      </button>
+      <div class="context-menu-divider" role="separator"></div>
+      <button type="button" role="menuitem" id="recycleSelection">
+        移入回收站
+      </button>
+      <div class="context-menu-divider" role="separator"></div>
+      <div class="context-menu-title">文件夹排序</div>
+      <button type="button" role="menuitemradio" data-folder-sort="name-asc">
+        名称：升序</button
+      ><button type="button" role="menuitemradio" data-folder-sort="name-desc">
+        名称：降序
+      </button>
+      <div class="context-menu-divider" role="separator"></div>
+      <button type="button" role="menuitemradio" data-folder-sort="count-desc">
+        素材数量：从多到少</button
+      ><button type="button" role="menuitemradio" data-folder-sort="count-asc">
+        素材数量：从少到多
+      </button>
+    </div>
+    <div id="toast" role="status"></div>
+    <script src="/library.js?v=feature-1.1"></script>
+    <script src="/features.js?v=interaction-1.3"></script>
+    <script src="/preferences.js?v=interaction-1.3"></script>
+    <script src="/catalog.js?v=interaction-1.3"></script>
+    <script src="/selection.js?v=selection-1.3"></script>
+    <script src="/app.js?v=interaction-1.3"></script>
+  </body>
+</html>

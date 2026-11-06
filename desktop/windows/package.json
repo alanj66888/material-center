@@ -1,0 +1,7 @@
+{
+  "name": "sucaiyu",
+  "productName": "素材中心",
+  "version": "1.4.0",
+  "main": "main.cjs",
+  "description": "本地素材管理与预览"
+}
