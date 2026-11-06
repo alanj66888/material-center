@@ -36,7 +36,17 @@ def backend_smoke(architecture="arm64"):
         from feature_fixtures import make_media
         from document_fixtures import make_documents
 
-        make_media(material / "媒体样片")
+        from unittest.mock import patch
+
+        with patch.dict(
+            os.environ,
+            {
+                "SUCAIYU_FFMPEG": str(
+                    ROOT / ".build/release-media-noncommercial/mac-arm64/ffmpeg/ffmpeg"
+                )
+            },
+        ):
+            make_media(material / "媒体样片")
         make_documents(material / "字体与矢量")
         environment = {
             key: value
@@ -101,7 +111,7 @@ def backend_smoke(architecture="arm64"):
                 request("POST", "/api/scan", {"path": str(material)}, headers)[0] == 200
             )
             catalog = json.loads(request("GET", "/api/catalog")[1])
-            assert catalog["total"] == 18 and "files" not in catalog
+            assert catalog["total"] == 18 and "files" not in catalog, catalog["total"]
             page = json.loads(request("GET", "/api/items?recursive=1&limit=2")[1])
             assert len(page["files"]) == 2 and page["total"] == 18
             assert request("GET", "/catalog.js")[0] == 200
